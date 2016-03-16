@@ -1,0 +1,64 @@
+﻿extends layout
+
+mixin hour(value)
+    input#sessionHour(type="radio", name="hour_filter", value='#{value}', checked=hour=='#{value}')
+    - var x = value
+    - var y = value - 12
+    if value > 12
+        | #{y} pm
+    else
+        | #{x} am
+
+block content
+    h1= title
+    p Welcome <span id='athleteName'></span>
+
+    // Wrapper
+    #wrapper
+
+        // Search
+        #userInfo
+            h2 Enter Email
+            input#inputUserEmail(type='text', placeholder='Email')
+            button#btnSearchEmail Search
+        // /Search
+
+        // Upcoming
+        #userList
+            h2 Upcoming Sessions
+            table
+                thead
+                    th Hour
+                    th Session
+                tbody
+        // /Upcoming
+
+        // Select
+        #addUser
+            h2 Select Session
+            Date: input(type='text', name='datepick', id='datepick', dateFormat='yy-mm-dd')
+            p
+                +hour('6')
+                +hour('7')
+                +hour('8')
+                +hour('9')
+                +hour('10')
+                +hour('16')
+                +hour('17')
+                +hour('18')
+                br
+                button#btnChooseSession Choose
+        // /Select
+
+        // Sessions
+        #sessions
+            h2 Sessions Today
+            table
+                thead
+                    th
+                    th
+                    th
+                    th
+                    th
+                tbody
+        // /Sessions
