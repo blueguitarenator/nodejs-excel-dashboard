@@ -1,22 +1,19 @@
 ﻿var express = require('express');
 var router = express.Router();
 
+var db = null;
 
 /*
  * POST search athlete with email
  */
 router.post('/search', function (req, res) {
-    var db = req.db;
-    console.log(req.body.email);
-    var strQuery = 'SELECT * FROM Athletes where email="' + req.body.email + '"';
-    console.log(strQuery);
-    var query = db.query(strQuery, function (err, rows) {
-        if (err) {
-            throw err;
-        } else {
-            console.log(rows);
-            res.json(rows);
-        }
+    db = req.db;
+    var email = req.body.email;
+    var sql = 'SELECT * FROM Athletes WHERE email = ?';
+    sql = db.format(sql, email);
+    var query = db.query(sql, function (err, rows) {
+        if (err) throw err;
+        res.json(rows);
     });
     console.log(query.sql);
 });
@@ -25,129 +22,71 @@ router.post('/search', function (req, res) {
  * GET athlete's sessions
  */
 router.get('/sessions/:id', function (req, res) {
-    console.log("YAHOOOOOO");
-    var db = req.db;
+    db = req.db;
     var athleteId = req.params.id;
-    var strQuery = 'SELECT datetime, hour FROM Sessions s join AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=' + athleteId;
+    var strQuery = 'SELECT datetime, hour FROM Sessions s JOIN AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=' + athleteId;
     db.query(strQuery, function (err, rows) {
-        if (err) {
-            throw err;
-        } else {
-            console.log(rows);
-            res.json(rows);
-        }
+        if (err) throw err;
+        console.log(rows);
+        res.json(rows);
     });
 });
 
+function getSessionId(date, hour, callback) {
+    db.query('SELECT * FROM Sessions WHERE datetime between ? and ? and hour=?', [date, date, hour], function (err, rows) {
+        if (err) throw err;
+        if (rows.length === 1) {
+            callback(null, rows[0].id);
+        } else {
+            callback(null, null);
+        }
+    });
+}
+
+function insertSession(date, hr, callback) {
+    var post = {datetime: date, hour: hr};
+    var sql = "INSERT INTO Sessions SET ?";
+    sql = db.format(sql, post);
+    db.query(sql, function(err, result) {
+        if (err) throw err;
+        callback(null, result);
+    });
+}
+
+function insertAthleteSession(sid, aid, callback) {
+    var post = { sessionId: sid, athleteId: aid };
+    var sql = 'INSERT INTO AthleteSession SET ?';
+    sql = db.format(sql, post);
+    db.query(sql, function(err) {
+        callback(err);
+    });
+}
+
 router.post('/athletesession', function (req, res) {
-    var db = req.db;
+    db = req.db;
     var sessionDate = req.body.date;
     var sessionHour = req.body.hour;
     var athleteId = req.body.athleteId;
-    var sessionId = -1;
-    db.query('select * from Sessions where datetime between ? and ? and hour=?', [sessionDate, sessionDate, sessionHour], function (err, rows) {
+
+    getSessionId(sessionDate, sessionHour, function(err, id) {
         if (err) throw err;
-        console.log("No error getting session");
-        if (rows.length === 0) {
-            // session does not exist yet.  Create it.
-            console.log("Session did not exist yet");
-            db.query('insert into Sessions (datetime, hour) values (?, ?)', [sessionDate, sessionHour], function (err, result) {
-                if (err) throw err;
-                console.log("No error inserting the new session");
-                sessionId = getSessionId(db, sessionDate, sessionHour);
-                console.log(sessionId);
+        if (id === null) {
+            insertSession(sessionDate, sessionHour, function(err1, result) {
+                if (err1) throw err;
+                insertAthleteSession(result.insertId, athleteId, function (err2) {
+                    res.send(
+                        (err2 === null) ? { msg: '' } : { msg: err2 }
+                    );
+                });
             });
         } else {
-            // session already existed
-            console.log("This session already existed");
-            sessionId = rows[0].id;
+            insertAthleteSession(id, athleteId, function (err1) {
+                res.send(
+                    (err1 === null) ? { msg: '' } : { msg: err1 }
+                );
+            });
         }
-        console.log("ath: " + athleteId);
-        console.log("ses: " + sessionId);
-        db.query('INSERT INTO AthleteSession (athleteId, sessionId) VALUES (?, ?)', [athleteId, sessionId], function (err, result) {
-            if (err) {
-                console.log("There was an error inserting athleteSession");
-            } else {
-                console.log("No error insert AS");
-            }
-            res.send(
-                (err === null) ? { msg: '' } : { msg: err }
-            );
-
-        });
     });
 });
-
-//var insertAthlete = function insertAthleteSession(req, res) {
-//    var db = req.db;
-//    db.query('INSERT INTO AthleteSession (athleteId, sessionId) VALUES (?, ?)', [req.body.athleteId, req.sessionId], function (err, result) {
-//        if (err) {
-//            throw err;
-//        }
-//        res.send(
-//            (err === null) ? { msg: '' } : { msg: err }
-//        );
-//    });
-//}
-//
-//var getSession = function getSession(req, res, next) {
-//    var db = req.db;
-//    console.log("SHIT: " + date + " " + hour + " " + id);
-//    db.query('select * from Sessions where datetime between ? and ? and hour=?', [sessionDate, sessionDate, sessionHour], function (err, rows) {
-//        console.log("Dinner");
-//        if (err) {
-//            console.log("select session err");
-//            throw err;
-//        }
-//        else {
-//            console.log("Did not error");
-//            if (rows.length === 0) {
-//                console.log("No session found. insert new session");
-//                db.query('insert into Sessions (datetime, hour) values (?, ?)', [sessionDate, sessionHour], function (err, result) {
-//                    if (err) throw err;
-//                    req.sessionId = result.id;
-//                });
-//            } else {
-//                console.log("Session exists. Callback with row: " + rows[0].id);
-//                req.sessionId = rows[0].id;
-//            }
-//        }
-//    });
-//    next();
-//}
-/*
- * POST athlete's session choice
- */
-//router.post('/athletesession', [getSession, insertAthlete]);
-// function(req, res, next) {
-//    var db = req.db;
-//    var sessionDate = req.body.date;
-//    var sessionHour = req.body.hour;
-//    var athleteId = req.body.athleteId;
-//    var sessionId = -1;
-//
-//    getSession(db, sessionDate, sessionHour, athleteId, function(err, sessionId) {
-//        if (err) {
-//            // error handling code goes here
-//            console.log("ERROR : ",err);
-//        } else {
-//            // code to execute on data retrieval
-//            console.log("result from db is : ",sessionId);
-//            insertAthleteSession(db, athleteId, sessionId, function(err, data) {
-//                res.send(
-//                    (err === null) ? { msg: '' } : { msg: err }
-//                );
-//            });
-//        }
-//    });
-//});
-
-
-
-function getSessionId(db, date, hour) {
-    db.query('select * from Sessions where datetime between ? and ? and hour=?', [date, date, hour], function(err, rows) {
-        return rows[0].id;
-    });
-};
 
 module.exports = router;
