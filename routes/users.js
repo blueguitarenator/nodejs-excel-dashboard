@@ -21,11 +21,27 @@ router.post('/search', function (req, res) {
 /*
  * GET athlete's sessions
  */
+router.get('/sessionsbydate/:bydate', function(req, res) {
+    db = req.db;
+    var date = req.params.bydate;
+    console.log(date);
+    var sql = "SELECT hour, fullname FROM Sessions s join AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE s.datetime = ? ORDER BY hour;";
+    sql = db.format(sql, date);
+    db.query(sql, function (err, rows) {
+        if (err) throw err;
+        console.log(rows);
+        res.json(rows);
+    });
+});
+
+/*
+ * GET athlete's sessions
+ */
 router.get('/sessions/:id', function (req, res) {
     db = req.db;
     var athleteId = req.params.id;
-    var strQuery = 'SELECT datetime, hour FROM Sessions s JOIN AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=' + athleteId;
-    db.query(strQuery, function (err, rows) {
+    var sql = 'SELECT datetime, hour FROM Sessions s JOIN AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=' + athleteId;
+    db.query(sql, function (err, rows) {
         if (err) throw err;
         console.log(rows);
         res.json(rows);

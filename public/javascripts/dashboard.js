@@ -38,9 +38,99 @@ function hideDashboard(part) {
 }
 
 function changeDate() {
-    alert("Date changed " + $('#addUser input#datepick').val());
-    // Populate sessions for today
+    var byDate = $('#addUser input#datepick').val();
+    // Empty content string
+    var tableContent = '';
+    
+    var url = '/users/sessionsbydate/' + byDate;
+    // jQuery AJAX call for JSON
+    $.getJSON(url, function (data) {
+        var six = [];
+        var seven = [];
+        var eight = [];
+        var nine = [];
+        var ten = [];
+        var sixteen = [];
+        var seventeen = [];
+        var eighteen = [];
+        // For each item in our JSON, add a table row and cells to the content string
+        $.each(data, function () {
+            if (this.hour === 6) {
+                six.push(this.fullname);
+            }
+            else if (this.hour === 7) {
+                seven.push(this.fullname);
+            }
+            else if (this.hour === 8) {
+                eight.push(this.fullname);
+            }
+            else if (this.hour === 9) {
+                nine.push(this.fullname);
+            }
+            else if (this.hour === 10) {
+                ten.push(this.fullname);
+            }
+            else if (this.hour === 16) {
+                sixteen.push(this.fullname);
+            }
+            else if (this.hour === 17) {
+                seventeen.push(this.fullname);
+            }
+            else if (this.hour === 18) {
+                eighteen.push(this.fullname);
+            }
+        });
 
+        tableContent += populateSessionRow('6am', six);
+        tableContent += populateSessionRow('7am', seven);
+        tableContent += populateSessionRow('8am', eight);
+        tableContent += populateSessionRow('9am', nine);
+        tableContent += populateSessionRow('10am', ten);
+        tableContent += populateSessionRow('11am', null);
+        tableContent += populateSessionRow('12pm', null);
+        tableContent += populateSessionRow('1pm', null);
+        tableContent += populateSessionRow('2pm', null);
+        tableContent += populateSessionRow('3pm', null);
+        tableContent += populateSessionRow('4pm', sixteen);
+        tableContent += populateSessionRow('5pm', seventeen);
+        tableContent += populateSessionRow('6pm', eighteen);
+        
+        // Inject the whole content string into our existing HTML table
+        $('#sessions table tbody').html(tableContent);
+    });
+}
+
+function populateSessionRow(displayText, map, rowCount) {
+    var tableContent = '';
+    if (map === null) {
+        tableContent += '<tr><td>' + displayText + '</td>';
+        tableContent += '<td>open</td>';
+        tableContent += '<td>open</td>';
+        tableContent += '<td>open</td>';
+        tableContent += '<td>open</td>';
+        tableContent += '<td>open</td></tr>';
+    } else {
+        var count = map.length;
+        
+        for (i = 0; i < 24; i++) {
+            if (i === 0) {
+                tableContent += '<tr><td>' + displayText + '</td>';
+            }
+            else if (i % 6 === 0) {
+                tableContent += '</tr><tr><td></td>';
+            }
+            else if (i > 0) {
+                if (count + 1 > i) {
+                    tableContent += '<td>' + map[i-1] + '</td>';
+                } else {
+                    tableContent += '<td>open</td>';
+                }
+            }
+        }
+        tableContent += '</tr>';
+    }
+    
+    return tableContent;
 }
 
 function chooseSession(event) {
@@ -80,10 +170,12 @@ function populateDashboard() {
     var tableContent = '';
     
     var url = '/users/sessions/' + athlete.id;
+
     // jQuery AJAX call for JSON
     $.getJSON(url, function (data) {
         
         // For each item in our JSON, add a table row and cells to the content string
+        
         $.each(data, function () {
             tableContent += '<tr>';
             tableContent += '<td>' + this.hour + '</td>';
@@ -94,6 +186,7 @@ function populateDashboard() {
         // Inject the whole content string into our existing HTML table
         $('#userList table tbody').html(tableContent);
     });
+   
     showDashboard('userList');
     showDashboard('addUser');
 };
