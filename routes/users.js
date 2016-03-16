@@ -40,7 +40,7 @@ router.get('/sessionsbydate/:bydate', function(req, res) {
 router.get('/sessions/:id', function (req, res) {
     db = req.db;
     var athleteId = req.params.id;
-    var sql = 'SELECT datetime, hour FROM Sessions s JOIN AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=' + athleteId;
+    var sql = 'SELECT * FROM Sessions s JOIN AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=' + athleteId;
     db.query(sql, function (err, rows) {
         if (err) throw err;
         console.log(rows);
@@ -103,6 +103,21 @@ router.post('/athletesession', function (req, res) {
             });
         }
     });
+});
+
+/*
+ * DELETE to deleteuser.
+ */
+router.delete('/delete/:aid/session/:sid', function (req, res) {
+    var db = req.db;
+    var userToRemove = req.params.aid;
+    var userSessionToDelete = req.params.sid;
+    var query = db.query('DELETE FROM AthleteSession WHERE athleteId = ? AND sessionId = ?', [userToRemove, userSessionToDelete], function (err) {
+        res.send(
+            (err === null) ? { msg: '' } : { msg: err }
+        );
+    });
+    console.log(query.sql);
 });
 
 module.exports = router;

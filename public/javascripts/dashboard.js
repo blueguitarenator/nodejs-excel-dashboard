@@ -11,6 +11,9 @@ $(document).ready(function () {
     // Choose a session
     $('#btnChooseSession').on('click', chooseSession);
     
+    // Delete User session link click
+    $('#userList table tbody').on('click', 'td a.linkdeleteusersession', deleteUserSession);
+    
     $("#datepick").datepicker({
         dateFormat: 'yy-mm-dd'
     }).datepicker('setDate', new Date());
@@ -180,6 +183,7 @@ function populateDashboard() {
             tableContent += '<tr>';
             tableContent += '<td>' + this.hour + '</td>';
             tableContent += '<td>' + this.datetime + '</td>';
+            tableContent += '<td><a href="#" class="linkdeleteusersession" rel="' + this.sessionId + '">delete</a></td>';
             tableContent += '</tr>';
         });
         
@@ -219,5 +223,40 @@ function searchEmail(event) {
                 hideDashboard('addUser');
             }
         });
+    }
+};
+
+// Delete User
+function deleteUserSession(event) {
+    
+    event.preventDefault();
+    
+    // Pop up a confirmation dialog
+    var confirmation = confirm('Are you sure you want to delete yourself from this session?');
+    
+    // Check and make sure the user confirmed
+    if (confirmation === true) {
+        
+        // If they did, do our delete
+        $.ajax({
+            type: 'DELETE',
+            url: '/users/delete/' + athlete.id + '/session/' + $(this).attr('rel')
+        }).done(function (response) {
+            
+            // Check for a successful (blank) response
+            if (response.msg === '') {
+            }
+            else {
+                alert('Error: ' + response.msg);
+            }
+            
+            // Update the table
+            populateDashboard();
+
+        });
+    }
+    else {
+        // If they said no to the confirm, do nothing
+        return false;
     }
 };
