@@ -11,7 +11,9 @@ $(document).ready(function () {
     // Choose a session
     $('#btnChooseSession').on('click', chooseSession);
     
-    $('#datepick').datepicker({ dateFormat: 'yy-mm-dd' });
+    $("#datepick").datepicker({
+        dateFormat: 'yy-mm-dd'
+    }).datepicker('setDate', new Date());
 
     $("#datepick").datepicker().on("change", function () {
         changeDate();
@@ -35,8 +37,10 @@ function hideDashboard(part) {
     page.style.display = 'none';
 }
 
-function changeDate(newDate) {
+function changeDate() {
     alert("Date changed " + $('#addUser input#datepick').val());
+    // Populate sessions for today
+
 }
 
 function chooseSession(event) {
