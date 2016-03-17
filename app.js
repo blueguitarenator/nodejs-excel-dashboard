@@ -4,6 +4,7 @@ var favicon = require('serve-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var dateFormat = require('dateformat');
 // Database
 var mysql = require('mysql');
 var db = mysql.createConnection({

@@ -1,4 +1,5 @@
-﻿// Userlist data array for filling in info box
+﻿
+// Userlist data array for filling in info box
 var athlete = null;
 var sessions = [];
 
@@ -178,18 +179,19 @@ function populateDashboard() {
     $.getJSON(url, function (data) {
         
         // For each item in our JSON, add a table row and cells to the content string
-        
         $.each(data, function () {
             tableContent += '<tr>';
             tableContent += '<td>' + this.hour + '</td>';
-            tableContent += '<td>' + this.datetime + '</td>';
-            tableContent += '<td><a href="#" class="linkdeleteusersession" rel="' + this.sessionId + '">delete</a></td>';
+            tableContent += '<td>' + this.dt + '</td>';
+            tableContent += '<td><a href="#" class="linkdeleteusersession" rel="' + this.id + '">delete</a></td>';
             tableContent += '</tr>';
         });
         
         // Inject the whole content string into our existing HTML table
         $('#userList table tbody').html(tableContent);
     });
+
+    changeDate();
    
     showDashboard('userList');
     showDashboard('addUser');

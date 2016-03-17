@@ -40,7 +40,7 @@ router.get('/sessionsbydate/:bydate', function(req, res) {
 router.get('/sessions/:id', function (req, res) {
     db = req.db;
     var athleteId = req.params.id;
-    var sql = 'SELECT * FROM Sessions s JOIN AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=' + athleteId;
+    var sql = "SELECT s.id, DATE_FORMAT(datetime, '%W %M %d, %Y') AS dt, hour FROM Sessions s JOIN AthleteSession ss ON s.id=ss.sessionId JOIN Athletes a ON ss.athleteId=a.id WHERE a.id=" + athleteId + " ORDER By datetime";
     db.query(sql, function (err, rows) {
         if (err) throw err;
         console.log(rows);
